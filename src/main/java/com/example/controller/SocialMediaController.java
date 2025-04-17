@@ -47,29 +47,46 @@ public class SocialMediaController {
         List<Message> messagesList = messageService.findAllmessages();
         return ResponseEntity.status(200).body(messagesList);
     }
+    
     //@GetMapping("/accounts/{account_id}/messages")
    
 
-    // @PostMapping(value ="/messages")
-    // public ResponseEntity<Message> postMessage(@RequestBody Message messages){
-    //     return ResponseEntity.status(200).body(messages);
-    //}
+    @PostMapping(value ="/messages")
+    public ResponseEntity<Message> postMessage(@RequestBody Message message){
+        Message newMessage = messageService.postMessage(message);
+        if (message.getMessageText().isBlank()) {
+            return ResponseEntity.status(400).body(message);
+        }
+        
+        return ResponseEntity.status(200).body(newMessage);
+    }
 
     // @PostMapping("/login")
     // public ResponseEntity<Message> postLogin(@RequestBody Message login){
     //     return ResponseEntity.status(200).body(login);
     // }
    
-    // @DeleteMapping("/messages/{message_id}")
-    // public ResponseEntity<Message> deleteMessage(@PathVariable Message message) {
-        
-    //     return ResponseEntity.status(200).body(message);
-    // }
+    @DeleteMapping("/messages/{message_id}")
+    public ResponseEntity deleteMessage(@PathVariable int message_id) {
+        Boolean messageExisted = messageService.deleteMessage(message_id);
+        if (messageExisted) {
+            return ResponseEntity.status(200).body(1);    
+        }
+        return ResponseEntity.status(200).body("");
+    }
    
-    // @PatchMapping("/messages/{message_id}")
-    // public ResponseEntity<Message> updateMessage(@PathVariable int message_id, @RequestBody Message message) {
+    @PatchMapping("/messages/{message_id}")
+    public ResponseEntity updateMessage(@PathVariable int message_id, @RequestBody Message newMessage) {
         
-    //     return ResponseEntity.status(200).body(message);
-    // }
+        if (newMessage.getMessageText().length() > 255 || newMessage.getMessageText().isEmpty()) {
+            return ResponseEntity.status(400).body("");
+ 
+        }
+        Boolean message = messageService.updateMessageByID(message_id, newMessage);
+        if (message.equals(false)) {
+            return ResponseEntity.status(400).body("");
+        }
+        return ResponseEntity.status(200).body(1);
+    }
 }
 
