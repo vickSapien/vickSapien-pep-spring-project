@@ -3,6 +3,7 @@ package com.example.controller;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.example.entity.Account;
 import com.example.entity.Message;
 import com.example.repository.MessageRepository;
 import com.example.service.AccountService;
@@ -28,14 +30,27 @@ import com.example.service.MessageService;
 @RestController
 public class SocialMediaController {
     MessageService messageService;
+    AccountService accountService;
     
     @Autowired
-    public SocialMediaController(MessageService messageService){
+    public SocialMediaController(MessageService messageService, AccountService accountService){
         this.messageService = messageService;
+        this.accountService = accountService;
     }
 
-    //@PostMapping("/register")
-    
+    @PostMapping("/register")
+    public @ResponseBody ResponseEntity<Account> Registration(@RequestBody Account register){
+        try {
+            accountService.registerAccount(register);
+            if (register.getPassword().length() < 4 || register.getUsername().isBlank()) {
+                return ResponseEntity.status(400).body(register);
+            }   
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(409).body(register);
+        }
+        return ResponseEntity.status(200).body(register);
+    }
+
     @GetMapping("/messages/{message_id}")
     public @ResponseBody ResponseEntity<Message> getMessageIDPathVariable(@PathVariable int message_id){
         Message message = messageService.getMessageByID(message_id);
@@ -48,23 +63,38 @@ public class SocialMediaController {
         return ResponseEntity.status(200).body(messagesList);
     }
     
-    //@GetMapping("/accounts/{account_id}/messages")
-   
+    @GetMapping("/accounts/{account_id}/messages")
+    public ResponseEntity<List<Message>> getAllMessegesByUser(@PathVariable int account_id){
+        List<Message> message = messageService.getAllMessagesByUser(account_id);
+        return ResponseEntity.status(200).body(message);
+    }
 
     @PostMapping(value ="/messages")
     public ResponseEntity<Message> postMessage(@RequestBody Message message){
-        Message newMessage = messageService.postMessage(message);
-        if (message.getMessageText().isBlank()) {
+        Message newMessage;
+        try {
+            newMessage = messageService.postMessage(message);
+            if (message.getMessageText().isBlank()) {
+                return ResponseEntity.status(400).body(message);
+            }
+        } catch (Exception e) {
             return ResponseEntity.status(400).body(message);
         }
-        
+
         return ResponseEntity.status(200).body(newMessage);
     }
 
-    // @PostMapping("/login")
-    // public ResponseEntity<Message> postLogin(@RequestBody Message login){
-    //     return ResponseEntity.status(200).body(login);
-    // }
+    @PostMapping("/login")
+    public ResponseEntity<Account> postLogin(@RequestBody Account login){
+        Account account;
+        try {
+            account = accountService.accountLogin(login);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(401).body(login);
+        }
+        account.getAccountId();
+        return ResponseEntity.status(200).body(account);
+    }
    
     @DeleteMapping("/messages/{message_id}")
     public ResponseEntity deleteMessage(@PathVariable int message_id) {

@@ -1,5 +1,6 @@
 package com.example.service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -15,7 +16,9 @@ import com.example.repository.MessageRepository;
 @Service
 @Transactional
 public class MessageService {
+    @Autowired
     MessageRepository messageRepository;
+    @Autowired
     AccountRepository accountRepository;
 
     @Autowired
@@ -45,8 +48,11 @@ public class MessageService {
     }
 
     public Message postMessage(Message message){
-        if (message.getMessageText().length() > 254  || !accountRepository.existsById(message.getPostedBy())) {
+        if (message.getMessageText().length() > 254 ) {
             message.setMessageText(" ");
+        }
+        else if (!accountRepository.existsByAccountId(message.getPostedBy())) {
+            throw new IllegalArgumentException("Account doesn't exist");
         }
         return messageRepository.save(message);
 
@@ -56,9 +62,11 @@ public class MessageService {
         return messageRepository.findAll();
     }
 
-    // public List<Message> getAllMessageByUser(int account_id){
-    //     return messageRepository.getAllMessageByUser(account_id);
-    // }
+    public List<Message> getAllMessagesByUser(int account_id){
+        List<Integer> user = new ArrayList<>();
+        user.add(account_id);
+        return messageRepository.findAllById(user);
+    }
 
     public Message getMessageByID(int message_id){
         Optional<Message> optionalMessage = messageRepository.findById(message_id);

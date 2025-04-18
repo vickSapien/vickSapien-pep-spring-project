@@ -10,12 +10,5 @@ import com.example.entity.Message;
 @EnableJpaRepositories
 public interface MessageRepository extends JpaRepository<Message, Integer> {
 
-    //List<Message> getAllMessageByUser(int account_id);
 
-
-    // Message postMessage(Message message);
-
-    //Message updateMessageByID(Message message);
-
-    //Message deleteMessage(Message message);
 }
